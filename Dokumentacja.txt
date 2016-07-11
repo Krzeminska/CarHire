@@ -1,0 +1,74 @@
+|--------------------------------------------------------------------------------------------------------|
+|			 Manual - Formularz do obs³ugi bazy danych krzeminska_kk_3i			 |
+|--------------------------------------------------------------------------------------------------------|
+|
+|Sekcja 0  - Daty
+|	Data dzisiejsza :	[Select curdate() from dual;]
+|	Data z przesuniêciem:	[SELECT DATE_ADD(curdate(), INTERVAL 3819 DAY) from dual;]
+|
+|Sekcja I
+|	Rejestruj WYPO¯YCZENIE auta
+|		<- odsy³a do podformularza "Wypo¿yczenie"
+|
+|	Rejestruj ZWROT auta
+|		<- odsy³a do podformularza "Zwrot"
+|
+|Sekcja II - Generatory raportów:
+|	Suma wp³ywów <- zwraca sumê wp³ywów z zadanego okresu
+|		[Select count(oplata_kk_3i) from wypozyczenie_kk_3i where zaplacone_kk_3i = true;]
+|
+|	Najczêœciej w naprawie <- wype³nia tabelê poni¿ej
+|		informacjami o najczêœciej naprawianych autach,
+|		gdzie Iloœæ_instancji to iloœæ napraw
+|		[Select * from samochod_kk_3i; Select * from naprawa_kk_3i;]
+|	
+|	Najrzadziej w naprawie <- wype³nia tabelê poni¿ej
+|		informacjami o najrzadziej naprawianych autach,
+|		gdzie Iloœæ_instancji to iloœæ napraw
+|		[Select * from samochod_kk_3i; Select * from naprawa_kk_3i;]
+|
+|	Najczêœciej wypo¿yczane <- wype³nia tabelê poni¿ej
+|		informacjami o najczêœciej wypo¿yczanych autach,
+|		gdzie Iloœæ_instancji to iloœæ wypo¿yczeñ
+|		[Select * from samochod_kk_3i; Select * from wypozyczenie_kk_3i;]
+|
+|	Najd³u¿ej wypo¿yczane <- wype³nia tabelê poni¿ej
+|		informacjami o najczêœciej wypo¿yczanych autach,
+|		gdzie Iloœæ_instancji to d³ugoœæ danego wypo¿yczenia
+|		[Select * from samochod_kk_3i; Select * from wypozyczenie_kk_3i;]
+|
+|	Raport zbiorczy <- wype³nia tabelê poni¿ej raportem
+|		dot. iloœci przychodu wygenerowanego przez dane
+|		auto w zadanym okresie
+|------------------------------------------------------------------------------------------|
+|				Podormularze:						   |
+|------------------------------------------------------------------------------------------|
+|	Wypo¿yczenie
+|		Krok 1. <- wyszukuje dostêpny samochód po cenie lub pocz¹tku nazwy
+|			[Select * from samochod_kk_3i where nazwa_kk_3i like 'nazwa%';]
+|			 lub [Select * from samochod_kk_3i where cena_kk_3i like cena;]
+|
+|		Krok 2. <- znajduje klienta (po pocz¹tku nazwiska) lub dodaje nowego
+|			[Select * from klient_kk_3i where nazwisko_kk_3i like 'nazwisko%';]
+|			lub [Insert into klient_kk_3i value ('imie', 'nazwisko', 'telefon', null);]
+|
+|		Dodaj wypo¿yczenie <- je¿eli uda³o siê przejœæ Krok 1. i 2. to program
+|			dodaje instancjê wypo¿yczenia o zadanych parametrach
+|			[insert into wypozyczenie_kk_3i value (now(), null, null, false, id_samochodu, id_klienta, null); UPDATE samochod_kk_3i set dostepnosc_kk_3i = false where id_samochod_kk_3i = id_samochodu;]
+|
+|	Zwrot
+|		Krok 1. <- znajduje klienta (po pocz¹tku nazwiska) i wype³nia tabelê
+|			danymi o nie oddanych przez niego autach
+|			[Select * from klient_kk_3i where nazwisko_kk_3i like 'nazwisko%'; SELECT id_samochod_kk_3i, datediff(now() , data_in_kk_3i) from wypozyczenie_kk_3i where id_klient_kk_3i = id_klienta;]
+|
+|		Krok 2. <- nale¿y odznaczyæ auto, które klient oddaje
+|			(poprzez zmianê wartoœci Zwrot w tabeli poni¿ej dla danego auta)
+|
+|		Rejestruj zwrot auta <- je¿eli uda³o siê przejœæ Krok 1. i 2.
+|			to program uaktualnia instancjê wypo¿yczenia o zadanych parametrach
+|			[UPDATE wypozyczenie_kk_3i set data_out_kk_3i = now(), oplata_kk_3i = koszt, zaplacone_kk_3i = true where id_wypozyczenie_kk_3i = id_wypozyczenia]
+|
+|
+|---------------------------------------------------------------------------------------------------|
+|   			 oprac. Katarzyna Krzemiñska, grupa: 3i, indeks: 3819			    |
+|---------------------------------------------------------------------------------------------------|
